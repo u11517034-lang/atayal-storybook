@@ -10,49 +10,52 @@
             margin: 0;
             padding: 0;
         }
-        body {
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        html, body {
+            width: 100%;
+            overflow-x: hidden; /* 防止手機尺寸橫向溢出 */
             background-color: #2b1f1a;
             color: #f4ede2;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+        body {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
         }
         .storybook-container {
             background-color: #1a120e;
             width: 100%;
-            max-width: 920px;
-            border-radius: 20px;
+            max-width: 900px;
+            border-radius: 16px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.6);
-            border: 4px solid #8c6d58;
+            border: 3px solid #8c6d58;
             overflow: hidden;
             text-align: center;
             position: relative;
         }
         .header-title {
-            padding: 12px 20px;
+            padding: 10px 15px;
             background-color: #3b281e;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             border-bottom: 2px solid #5a4538;
         }
         .header-title img {
-            height: 38px;
+            height: 32px;
             width: auto;
         }
         .header-title h1 {
-            font-size: 22px;
+            font-size: 20px;
             color: #d9a441;
-            letter-spacing: 1px;
         }
         .image-container {
             width: 100%;
-            height: 520px;
+            height: 450px;
             background-color: #0d0806;
             display: flex;
             align-items: center;
@@ -60,24 +63,36 @@
             position: relative;
         }
         .image-container img.main-story-img {
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             object-fit: contain;
         }
+        /* 載入指示器 */
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            color: #fff;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            z-index: 10;
+        }
         .subtitle-box {
-            padding: 16px 24px;
+            padding: 14px 20px;
             background-color: #261b15;
             border-top: 2px solid #4a3528;
-            font-size: 18px;
+            font-size: 16px;
             color: #fcebd5;
-            min-height: 75px;
+            min-height: 65px;
             display: flex;
             align-items: center;
             justify-content: center;
-            line-height: 1.6;
+            line-height: 1.5;
         }
         .audio-section {
-            padding: 12px 20px;
+            padding: 12px 15px;
             background-color: #1f1511;
             display: flex;
             flex-direction: column;
@@ -94,18 +109,11 @@
             flex-wrap: wrap;
         }
         .read-icon {
-            height: 32px;
+            height: 28px;
             vertical-align: middle;
         }
-        .audio-control-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            color: #d1c2b4;
-        }
         .controls {
-            padding: 16px 24px;
+            padding: 12px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -119,18 +127,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: transform 0.15s;
         }
         .nav-btn img {
-            height: 48px;
+            height: 44px;
             width: auto;
-            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
-        }
-        .nav-btn:hover:not(:disabled) {
-            transform: scale(1.1);
-        }
-        .nav-btn:active:not(:disabled) {
-            transform: scale(0.95);
         }
         .nav-btn:disabled img {
             opacity: 0.3;
@@ -139,74 +139,73 @@
         }
         .btn-group {
             display: flex;
-            gap: 14px;
+            gap: 10px;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         .btn-secondary {
             background-color: #d9a441;
             color: #1e1612;
             border: none;
-            padding: 8px 18px;
-            font-size: 15px;
+            padding: 8px 16px;
+            font-size: 14px;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background 0.2s;
         }
         .btn-secondary:hover {
             background-color: #ecc055;
         }
         .page-indicator {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             color: #d9a441;
+        }
+        @media (max-width: 600px) {
+            .image-container { height: 280px; }
+            .header-title h1 { font-size: 16px; }
+            .nav-btn img { height: 36px; }
         }
     </style>
 </head>
 <body>
 
 <div class="storybook-container">
-    <!-- 標題欄 (指向 graphics/spirit.png) -->
     <div class="header-title">
         <img src="graphics/spirit.png" alt="小精靈圖示">
         <h1>mnanak na qalang 奇妙的部落</h1>
     </div>
 
-    <!-- 1. 繪本圖片區域 -->
     <div class="image-container">
+        <div class="loading-overlay" id="loadingOverlay">載入素材中...</div>
         <img id="storyImage" class="main-story-img" src="" alt="繪本頁面圖片">
     </div>
 
-    <!-- 2. 中文／族語對照字幕 -->
-    <div class="subtitle-box" id="subtitle">
-        載入中...
-    </div>
+    <div class="subtitle-box" id="subtitle">載入中...</div>
 
-    <!-- 3. 音訊控制區 (指向 graphics/read.jpg) -->
     <div class="audio-section">
         <div class="audio-row">
             <img src="graphics/read.jpg" class="read-icon" alt="朗讀">
-            <span style="font-weight: bold; color: #d9a441;">泰雅族語朗讀：</span>
-            <audio id="audioPlayer" controls style="width: 55%; min-width: 250px;"></audio>
+            <button id="speechPlayBtn" class="btn-secondary" onclick="toggleSpeechPlay()">朗讀 / 暫停</button>
+            <audio id="audioPlayer" controls style="width: 50%; min-width: 200px;"></audio>
         </div>
 
         <div class="audio-row">
-            <div class="audio-control-item">
-                <input type="checkbox" id="bgmToggle" checked onchange="toggleBGM()">
-                <label for="bgmToggle">🎵 情境背景音樂</label>
-            </div>
-            <div class="audio-control-item">
-                <label for="bgmVolume">BGM 音量：</label>
+            <button id="muteBtn" class="btn-secondary" onclick="toggleMute()">靜音全站</button>
+            <label for="bgmToggle">
+                <input type="checkbox" id="bgmToggle" checked onchange="toggleBGM()"> 🎵 背景音樂
+            </label>
+            <label for="bgmVolume">音量：
                 <input type="range" id="bgmVolume" min="0" max="1" step="0.05" value="0.25" oninput="adjustBGMVolume(this.value)">
-            </div>
+            </label>
             <audio id="bgmPlayer" loop style="display: none;"></audio>
         </div>
     </div>
 
-    <!-- 4. 底部分頁導覽 (指向 graphics/left.jpg 與 graphics/right.jpg) -->
     <div class="controls">
-        <button class="nav-btn" id="prevBtn" onclick="changePage(-1)" title="上一頁">
-            <img src="graphics/left.jpg" alt="上一頁箭頭">
+        <button class="nav-btn" id="prevBtn" onclick="changePage(-1)" aria-label="上一頁">
+            <img src="graphics/left.jpg" alt="上一頁">
         </button>
         
         <div class="btn-group">
@@ -214,14 +213,13 @@
             <button class="btn-secondary" id="autoPlayBtn" onclick="toggleAutoPlay()">自動播放：關</button>
         </div>
 
-        <button class="nav-btn" id="nextBtn" onclick="changePage(1)" title="下一頁">
-            <img src="graphics/right.jpg" alt="下一頁箭頭">
+        <button class="nav-btn" id="nextBtn" onclick="changePage(1)" aria-label="下一頁">
+            <img src="graphics/right.jpg" alt="下一頁">
         </button>
     </div>
 </div>
 
 <script>
-    // 20 頁故事完整對應陣列（已配合你的資料夾結構修正路徑）
     const storyPages = [
         { page: 1,  image: "graphics/0.jpg",  audio: "speech/speech0.mp3",  bgm: "music/music0.mp3", subtitle: "《mnanak na qalang》（奇妙的部落）- 繪本封面" },
         { page: 2,  image: "graphics/1.jpg",  audio: "speech/speech1.mp3",  bgm: "music/music1.mp3", subtitle: "第 1 頁：廣闊的金黃粟米田與自然生態" },
@@ -247,6 +245,8 @@
 
     let currentPageIndex = 0;
     let isAutoPlay = false;
+    let isGlobalMuted = false;
+    let baseBgmVolume = 0.25;
 
     const storyImage = document.getElementById('storyImage');
     const audioPlayer = document.getElementById('audioPlayer');
@@ -257,20 +257,38 @@
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const autoPlayBtn = document.getElementById('autoPlayBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const loadingOverlay = document.getElementById('loadingOverlay');
 
     function loadPage(index) {
+        showLoading(true);
         const pageData = storyPages[index];
+
+        // 停止上一頁的語音 (避免聲音重疊)
+        audioPlayer.pause();
+        audioPlayer.currentTime = 0;
+
+        // 1. 載入圖片與預載下一頁
         storyImage.src = pageData.image;
+        preloadNextPage(index + 1);
+
+        storyImage.onload = () => showLoading(false);
+        storyImage.onerror = () => {
+            showLoading(false);
+            subtitle.innerText = "素材載入失敗，請重試";
+        };
+
+        // 2. 設置音訊來源
         audioPlayer.src = pageData.audio;
-        
         subtitle.innerText = pageData.subtitle;
         pageNumber.innerText = `第 ${pageData.page} / ${storyPages.length} 頁`;
 
+        // 3. 按鈕狀態處理
         prevBtn.disabled = (index === 0);
         nextBtn.disabled = (index === storyPages.length - 1);
 
-        // 背景音樂控制
-        if (pageData.bgm && bgmToggle.checked) {
+        // 4. 背景音樂 (BGM) 播放與混音控制
+        if (pageData.bgm && bgmToggle.checked && !isGlobalMuted) {
             if (bgmPlayer.src.indexOf(pageData.bgm) === -1) {
                 bgmPlayer.src = pageData.bgm;
                 bgmPlayer.play().catch(err => {});
@@ -279,7 +297,25 @@
             bgmPlayer.pause();
         }
 
-        audioPlayer.play().catch(err => {});
+        // 播放主要語音並套用混音 (Ducking) 效果
+        audioPlayer.muted = isGlobalMuted;
+        bgmPlayer.muted = isGlobalMuted;
+
+        audioPlayer.play().then(() => {
+            lowerBGMVolume(); // 朗讀時降低背景音樂
+        }).catch(err => {});
+    }
+
+    // 預載下一頁圖片功能
+    function preloadNextPage(nextIndex) {
+        if (nextIndex < storyPages.length) {
+            const img = new Image();
+            img.src = storyPages[nextIndex].image;
+        }
+    }
+
+    function showLoading(show) {
+        loadingOverlay.style.display = show ? 'flex' : 'none';
     }
 
     function changePage(direction) {
@@ -289,13 +325,51 @@
         loadPage(currentPageIndex);
     }
 
+    // 朗讀時將 BGM 降音 (Ducking)
+    function lowerBGMVolume() {
+        if (!bgmPlayer.paused) {
+            bgmPlayer.volume = baseBgmVolume * 0.3; // 降至 30%
+        }
+    }
+
+    // 朗讀結束或暫停時恢復 BGM 音量
+    function restoreBGMVolume() {
+        if (!bgmPlayer.paused) {
+            bgmPlayer.volume = baseBgmVolume;
+        }
+    }
+
+    audioPlayer.addEventListener('play', lowerBGMVolume);
+    audioPlayer.addEventListener('pause', restoreBGMVolume);
+    audioPlayer.addEventListener('ended', () => {
+        restoreBGMVolume();
+        if (isAutoPlay && currentPageIndex < storyPages.length - 1) {
+            changePage(1);
+        }
+    });
+
+    function toggleSpeechPlay() {
+        if (audioPlayer.paused) {
+            audioPlayer.play().catch(err => {});
+        } else {
+            audioPlayer.pause();
+        }
+    }
+
+    function toggleMute() {
+        isGlobalMuted = !isGlobalMuted;
+        audioPlayer.muted = isGlobalMuted;
+        bgmPlayer.muted = isGlobalMuted;
+        muteBtn.innerText = isGlobalMuted ? '解除靜音' : '靜音全站';
+    }
+
     function toggleAutoPlay() {
         isAutoPlay = !isAutoPlay;
         autoPlayBtn.innerText = `自動播放：${isAutoPlay ? '開' : '關'}`;
     }
 
     function toggleBGM() {
-        if (!bgmToggle.checked) {
+        if (!bgmToggle.checked || isGlobalMuted) {
             bgmPlayer.pause();
         } else {
             const pageData = storyPages[currentPageIndex];
@@ -307,15 +381,27 @@
     }
 
     function adjustBGMVolume(val) {
-        bgmPlayer.volume = val;
+        baseBgmVolume = parseFloat(val);
+        if (audioPlayer.paused) {
+            bgmPlayer.volume = baseBgmVolume;
+        } else {
+            lowerBGMVolume();
+        }
     }
 
-    audioPlayer.addEventListener('ended', () => {
-        if (isAutoPlay && currentPageIndex < storyPages.length - 1) {
-            changePage(1);
+    // 鍵盤操控支援 (左右方向鍵翻頁、空白鍵播放/暫停)
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'ArrowRight' || e.key === 'ArrowRight') {
+            if (currentPageIndex < storyPages.length - 1) changePage(1);
+        } else if (e.code === 'ArrowLeft' || e.key === 'ArrowLeft') {
+            if (currentPageIndex > 0) changePage(-1);
+        } else if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault();
+            toggleSpeechPlay();
         }
     });
 
+    // 初始化頁面
     loadPage(0);
 </script>
 
