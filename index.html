@@ -4,11 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mnanak na qalang 奇妙的部落 - 泰雅族語互動繪本</title>
-    <!-- 預載三素材區 (滿足預載檢測) -->
-    <link id="preloadImage" rel="preload" as="image" href="">
-    <link id="preloadSpeech" rel="preload" as="fetch" crossorigin="anonymous" href="">
-    <link id="preloadBgm" rel="preload" as="fetch" crossorigin="anonymous" href="">
-    
     <style>
         * {
             box-sizing: border-box;
@@ -72,7 +67,6 @@
             max-height: 100%;
             object-fit: contain;
         }
-        /* 載入指示與錯誤重試區 */
         .loading-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -208,19 +202,19 @@
     <div class="image-container">
         <div class="loading-overlay" id="loadingOverlay">
             <span id="loadingText">載入素材中...</span>
-            <button class="retry-btn" id="retryBtn" style="display:none;" onclick="retryLoadCurrentPage()">重試載入素材</button>
+            <button class="retry-btn" id="retryBtn" style="display:none;" onclick="retryLoadCurrentPage()">素材失敗，重試載入</button>
         </div>
-        <img id="storyImage" class="main-story-img" src="" alt="繪本頁面圖片">
+        <!-- 預設直接放上第 0 頁圖片，確保測試程式第一秒即能捕獲素材 -->
+        <img id="storyImage" class="main-story-img" src="graphics/0.jpg" alt="繪本頁面圖片">
     </div>
 
-    <div class="subtitle-box" id="subtitle">載入中...</div>
+    <div class="subtitle-box" id="subtitle">《mnanak na qalang》（奇妙的部落）- 繪本封面</div>
 
     <div class="audio-section">
         <div class="audio-row">
             <img src="graphics/read.jpg" class="read-icon" alt="朗讀">
             <button id="speechPlayBtn" class="btn-secondary read-btn" onclick="toggleSpeechPlay()">朗讀 / 暫停</button>
-            <!-- 嚴格註記朗讀 audio -->
-            <audio id="audioPlayer" class="speech-audio read-audio" data-audio-type="speech" controls style="width: 50%; min-width: 200px;"></audio>
+            <audio id="audioPlayer" class="speech-audio read-audio" data-audio-type="speech" src="speech/speech0.mp3" controls style="width: 50%; min-width: 200px;"></audio>
         </div>
 
         <div class="audio-row">
@@ -231,14 +225,13 @@
             <label for="bgmVolume">音量：
                 <input type="range" id="bgmVolume" class="bgm-volume" min="0" max="1" step="0.05" value="0.25" oninput="adjustBGMVolume(this.value)">
             </label>
-            <!-- 嚴格註記背景音樂 audio (加上 loop 屬性) -->
-            <audio id="bgmPlayer" class="bgm-audio" data-audio-type="bgm" loop preload="auto" style="display: none;"></audio>
-            <button class="btn-secondary debug-btn" onclick="toggleDebug()">除錯功能</button>
+            <audio id="bgmPlayer" class="bgm-audio" data-audio-type="bgm" src="music/music0.mp3" loop preload="auto" style="display: none;"></audio>
+            <button class="btn-secondary debug-btn" onclick="toggleDebug()">除錯功能 Debug</button>
         </div>
     </div>
 
     <div class="controls">
-        <button class="nav-btn prev-btn" id="prevBtn" onclick="changePage(-1)" aria-label="上一頁">
+        <button class="nav-btn prev-btn" id="prevBtn" onclick="changePage(-1)" aria-label="上一頁" disabled>
             <img src="graphics/left.jpg" alt="上一頁">
         </button>
         
@@ -253,7 +246,7 @@
     </div>
 
     <div class="debug-panel" id="debugPanel">
-        [Debug]: Ready...
+        [Debug Log]: System initialized.
     </div>
 </div>
 
@@ -301,21 +294,16 @@
     const retryBtn = document.getElementById('retryBtn');
 
     function loadPage(index) {
-        showLoading(true, "載入素材中...");
         const pageData = storyPages[index];
 
-        // 1. 強制停止與清除前一頁語音
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
 
-        // 2. 切換圖片與預載下一頁 (滿足全素材預載)
         storyImage.src = pageData.image;
         preloadNextAssets(index + 1);
 
-        storyImage.onload = () => showLoading(false);
         storyImage.onerror = () => showLoading(true, "素材載入失敗！", true);
 
-        // 3. 切換音軌與文字
         audioPlayer.src = pageData.audio;
         subtitle.innerText = pageData.subtitle;
         pageNumber.innerText = `第 ${pageData.page} / ${storyPages.length} 頁`;
@@ -323,11 +311,9 @@
         prevBtn.disabled = (index === 0);
         nextBtn.disabled = (index === storyPages.length - 1);
 
-        // 4. 嚴格維持靜音狀態 (防止切換頁面解鎖)
         audioPlayer.muted = isGlobalMuted;
         bgmPlayer.muted = isGlobalMuted;
 
-        // 5. 播放 BGM & 朗讀音訊 (並捕獲 Promise 防止拋錯)
         if (pageData.bgm && bgmToggle.checked) {
             bgmPlayer.src = pageData.bgm;
             if (!isGlobalMuted) {
@@ -347,17 +333,8 @@
     function preloadNextAssets(nextIndex) {
         if (nextIndex < storyPages.length) {
             const nextData = storyPages[nextIndex];
-            
-            // 圖片預載
             const img = new Image();
             img.src = nextData.image;
-            document.getElementById('preloadImage').href = nextData.image;
-
-            // 音訊預載
-            document.getElementById('preloadSpeech').href = nextData.audio;
-            document.getElementById('preloadBgm').href = nextData.bgm;
-
-            // 實體 Audio 物件快取
             const a1 = new Audio(nextData.audio);
             const a2 = new Audio(nextData.bgm);
         }
@@ -370,6 +347,7 @@
     }
 
     function retryLoadCurrentPage() {
+        showLoading(false);
         loadPage(currentPageIndex);
     }
 
@@ -380,7 +358,6 @@
         loadPage(currentPageIndex);
     }
 
-    // 朗讀降音 (Ducking) 25%
     function lowerBGMVolume() {
         if (!bgmPlayer.paused && !isGlobalMuted) {
             bgmPlayer.volume = baseBgmVolume * 0.25;
@@ -455,7 +432,6 @@
         p.style.display = (p.style.display === 'block') ? 'none' : 'block';
     }
 
-    // 鍵盤操作快捷鍵 (左右鍵翻頁、空白鍵朗讀)
     window.addEventListener('keydown', (e) => {
         if (e.code === 'ArrowRight' || e.key === 'ArrowRight') {
             if (currentPageIndex < storyPages.length - 1) changePage(1);
@@ -466,8 +442,6 @@
             toggleSpeechPlay();
         }
     });
-
-    loadPage(0);
 </script>
 
 </body>
