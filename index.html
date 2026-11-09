@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mnanak na qalang 奇妙的部落 - 泰雅族語互動繪本</title>
+    <!-- 動態預載標籤預留區 -->
+    <link id="preloadImage" rel="preload" as="image" href="">
+    <link id="preloadSpeech" rel="preload" as="fetch" href="">
+    <link id="preloadBgm" rel="preload" as="fetch" href="">
+    
     <style>
         * {
             box-sizing: border-box;
@@ -12,7 +17,7 @@
         }
         html, body {
             width: 100%;
-            overflow-x: hidden; /* 防止手機尺寸橫向溢出 */
+            overflow-x: hidden;
             background-color: #2b1f1a;
             color: #f4ede2;
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
@@ -67,17 +72,28 @@
             max-height: 100%;
             object-fit: contain;
         }
-        /* 載入指示器 */
+        /* 載入指示與錯誤重試區 */
         .loading-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0,0,0,0.7);
             color: #fff;
             display: none;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-size: 18px;
             z-index: 10;
+            gap: 12px;
+        }
+        .retry-btn {
+            background-color: #c84b31;
+            color: white;
+            border: none;
+            padding: 8px 18px;
+            font-size: 15px;
+            border-radius: 6px;
+            cursor: pointer;
         }
         .subtitle-box {
             padding: 14px 20px;
@@ -139,7 +155,7 @@
         }
         .btn-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             flex-wrap: wrap;
             justify-content: center;
@@ -148,7 +164,7 @@
             background-color: #d9a441;
             color: #1e1612;
             border: none;
-            padding: 8px 16px;
+            padding: 8px 14px;
             font-size: 14px;
             font-weight: bold;
             border-radius: 6px;
@@ -161,6 +177,18 @@
             font-size: 16px;
             font-weight: bold;
             color: #d9a441;
+        }
+        .debug-panel {
+            display: none;
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            text-align: left;
+            max-height: 100px;
+            overflow-y: auto;
+            border-top: 1px solid #333;
         }
         @media (max-width: 600px) {
             .image-container { height: 280px; }
@@ -178,7 +206,10 @@
     </div>
 
     <div class="image-container">
-        <div class="loading-overlay" id="loadingOverlay">載入素材中...</div>
+        <div class="loading-overlay" id="loadingOverlay">
+            <span id="loadingText">載入素材中...</span>
+            <button class="retry-btn" id="retryBtn" style="display:none;" onclick="retryLoadCurrentPage()">素材失敗，重試載入</button>
+        </div>
         <img id="storyImage" class="main-story-img" src="" alt="繪本頁面圖片">
     </div>
 
@@ -188,7 +219,8 @@
         <div class="audio-row">
             <img src="graphics/read.jpg" class="read-icon" alt="朗讀">
             <button id="speechPlayBtn" class="btn-secondary" onclick="toggleSpeechPlay()">朗讀 / 暫停</button>
-            <audio id="audioPlayer" controls style="width: 50%; min-width: 200px;"></audio>
+            <!-- 明確標示語音朗讀 audio 標籤 -->
+            <audio id="audioPlayer" class="speech-audio" data-audio-type="speech" controls style="width: 50%; min-width: 200px;"></audio>
         </div>
 
         <div class="audio-row">
@@ -199,7 +231,9 @@
             <label for="bgmVolume">音量：
                 <input type="range" id="bgmVolume" min="0" max="1" step="0.05" value="0.25" oninput="adjustBGMVolume(this.value)">
             </label>
-            <audio id="bgmPlayer" loop style="display: none;"></audio>
+            <!-- 明確標示背景音樂 audio 標籤與靜音/循環屬性 -->
+            <audio id="bgmPlayer" class="bgm-audio" data-audio-type="bgm" loop style="display: none;"></audio>
+            <button class="btn-secondary debug-btn" onclick="toggleDebug()">除錯功能 Debug</button>
         </div>
     </div>
 
@@ -216,6 +250,11 @@
         <button class="nav-btn" id="nextBtn" onclick="changePage(1)" aria-label="下一頁">
             <img src="graphics/right.jpg" alt="下一頁">
         </button>
+    </div>
+
+    <!-- 除錯面板 -->
+    <div class="debug-panel" id="debugPanel">
+        [Debug Log]: 系統準備就緒...
     </div>
 </div>
 
@@ -259,63 +298,90 @@
     const autoPlayBtn = document.getElementById('autoPlayBtn');
     const muteBtn = document.getElementById('muteBtn');
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    const retryBtn = document.getElementById('retryBtn');
+    const debugPanel = document.getElementById('debugPanel');
+
+    function logDebug(msg) {
+        debugPanel.innerHTML += `<br>[${new Date().toLocaleTimeString()}] ${msg}`;
+    }
 
     function loadPage(index) {
-        showLoading(true);
+        showLoading(true, "載入素材中...");
         const pageData = storyPages[index];
 
-        // 停止上一頁的語音 (避免聲音重疊)
+        // 停止上一頁語音並重置
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
 
-        // 1. 載入圖片與預載下一頁
+        // 圖片與音軌三合一預載
         storyImage.src = pageData.image;
-        preloadNextPage(index + 1);
+        preloadNextAssets(index + 1);
 
-        storyImage.onload = () => showLoading(false);
-        storyImage.onerror = () => {
+        storyImage.onload = () => {
             showLoading(false);
-            subtitle.innerText = "素材載入失敗，請重試";
+            logDebug(`圖片載入成功: Page ${index + 1}`);
+        };
+        storyImage.onerror = () => {
+            showLoading(true, "素材載入失敗！", true);
+            logDebug(`素材載入失敗: Page ${index + 1}`);
         };
 
-        // 2. 設置音訊來源
         audioPlayer.src = pageData.audio;
         subtitle.innerText = pageData.subtitle;
         pageNumber.innerText = `第 ${pageData.page} / ${storyPages.length} 頁`;
 
-        // 3. 按鈕狀態處理
         prevBtn.disabled = (index === 0);
         nextBtn.disabled = (index === storyPages.length - 1);
 
-        // 4. 背景音樂 (BGM) 播放與混音控制
-        if (pageData.bgm && bgmToggle.checked && !isGlobalMuted) {
+        // 套用全站靜音約束（跨頁維持靜音狀態）
+        audioPlayer.muted = isGlobalMuted;
+        bgmPlayer.muted = isGlobalMuted;
+
+        // 背景音樂控制 (靜音時不自動響起)
+        if (pageData.bgm && bgmToggle.checked) {
             if (bgmPlayer.src.indexOf(pageData.bgm) === -1) {
                 bgmPlayer.src = pageData.bgm;
+            }
+            if (!isGlobalMuted) {
                 bgmPlayer.play().catch(err => {});
             }
         } else {
             bgmPlayer.pause();
         }
 
-        // 播放主要語音並套用混音 (Ducking) 效果
-        audioPlayer.muted = isGlobalMuted;
-        bgmPlayer.muted = isGlobalMuted;
-
-        audioPlayer.play().then(() => {
-            lowerBGMVolume(); // 朗讀時降低背景音樂
-        }).catch(err => {});
-    }
-
-    // 預載下一頁圖片功能
-    function preloadNextPage(nextIndex) {
-        if (nextIndex < storyPages.length) {
-            const img = new Image();
-            img.src = storyPages[nextIndex].image;
+        // 朗讀觸發邏輯（若非靜音則自動播放）
+        if (!isGlobalMuted) {
+            audioPlayer.play().then(() => {
+                lowerBGMVolume();
+            }).catch(err => {});
         }
     }
 
-    function showLoading(show) {
+    // 預載下一頁的三大素材 (Image + Speech + BGM)
+    function preloadNextAssets(nextIndex) {
+        if (nextIndex < storyPages.length) {
+            const nextData = storyPages[nextIndex];
+            
+            // 1. Image Preload
+            const img = new Image();
+            img.src = nextData.image;
+            document.getElementById('preloadImage').href = nextData.image;
+
+            // 2. Audio Fetch Preload
+            document.getElementById('preloadSpeech').href = nextData.audio;
+            document.getElementById('preloadBgm').href = nextData.bgm;
+        }
+    }
+
+    function showLoading(show, text = "載入素材中...", showError = false) {
         loadingOverlay.style.display = show ? 'flex' : 'none';
+        loadingText.innerText = text;
+        retryBtn.style.display = showError ? 'block' : 'none';
+    }
+
+    function retryLoadCurrentPage() {
+        loadPage(currentPageIndex);
     }
 
     function changePage(direction) {
@@ -325,16 +391,16 @@
         loadPage(currentPageIndex);
     }
 
-    // 朗讀時將 BGM 降音 (Ducking)
+    // 朗讀時降音 (Ducking)
     function lowerBGMVolume() {
-        if (!bgmPlayer.paused) {
-            bgmPlayer.volume = baseBgmVolume * 0.3; // 降至 30%
+        if (!bgmPlayer.paused && !isGlobalMuted) {
+            bgmPlayer.volume = baseBgmVolume * 0.25;
         }
     }
 
-    // 朗讀結束或暫停時恢復 BGM 音量
+    // 朗讀恢復原音量
     function restoreBGMVolume() {
-        if (!bgmPlayer.paused) {
+        if (!bgmPlayer.paused && !isGlobalMuted) {
             bgmPlayer.volume = baseBgmVolume;
         }
     }
@@ -343,6 +409,7 @@
     audioPlayer.addEventListener('pause', restoreBGMVolume);
     audioPlayer.addEventListener('ended', () => {
         restoreBGMVolume();
+        logDebug(`朗讀結束: Page ${currentPageIndex + 1}`);
         if (isAutoPlay && currentPageIndex < storyPages.length - 1) {
             changePage(1);
         }
@@ -350,7 +417,7 @@
 
     function toggleSpeechPlay() {
         if (audioPlayer.paused) {
-            audioPlayer.play().catch(err => {});
+            if (!isGlobalMuted) audioPlayer.play().catch(err => {});
         } else {
             audioPlayer.pause();
         }
@@ -360,7 +427,15 @@
         isGlobalMuted = !isGlobalMuted;
         audioPlayer.muted = isGlobalMuted;
         bgmPlayer.muted = isGlobalMuted;
+        if (isGlobalMuted) {
+            bgmPlayer.pause();
+            audioPlayer.pause();
+        } else {
+            const pageData = storyPages[currentPageIndex];
+            if (pageData.bgm && bgmToggle.checked) bgmPlayer.play().catch(err => {});
+        }
         muteBtn.innerText = isGlobalMuted ? '解除靜音' : '靜音全站';
+        logDebug(`全站靜音狀態: ${isGlobalMuted}`);
     }
 
     function toggleAutoPlay() {
@@ -389,7 +464,11 @@
         }
     }
 
-    // 鍵盤操控支援 (左右方向鍵翻頁、空白鍵播放/暫停)
+    function toggleDebug() {
+        debugPanel.style.display = (debugPanel.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // 鍵盤操作控制
     window.addEventListener('keydown', (e) => {
         if (e.code === 'ArrowRight' || e.key === 'ArrowRight') {
             if (currentPageIndex < storyPages.length - 1) changePage(1);
@@ -401,7 +480,6 @@
         }
     });
 
-    // 初始化頁面
     loadPage(0);
 </script>
 
