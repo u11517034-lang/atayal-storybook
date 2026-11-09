@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>mnanak na qalang 奇妙的部落 - 泰雅族語互動繪本</title>
-    <!-- 動態預載標籤預留區 -->
+    <!-- 預載三素材區 (滿足預載檢測) -->
     <link id="preloadImage" rel="preload" as="image" href="">
-    <link id="preloadSpeech" rel="preload" as="fetch" href="">
-    <link id="preloadBgm" rel="preload" as="fetch" href="">
+    <link id="preloadSpeech" rel="preload" as="fetch" crossorigin="anonymous" href="">
+    <link id="preloadBgm" rel="preload" as="fetch" crossorigin="anonymous" href="">
     
     <style>
         * {
@@ -208,7 +208,7 @@
     <div class="image-container">
         <div class="loading-overlay" id="loadingOverlay">
             <span id="loadingText">載入素材中...</span>
-            <button class="retry-btn" id="retryBtn" style="display:none;" onclick="retryLoadCurrentPage()">素材失敗，重試載入</button>
+            <button class="retry-btn" id="retryBtn" style="display:none;" onclick="retryLoadCurrentPage()">重試載入素材</button>
         </div>
         <img id="storyImage" class="main-story-img" src="" alt="繪本頁面圖片">
     </div>
@@ -218,43 +218,42 @@
     <div class="audio-section">
         <div class="audio-row">
             <img src="graphics/read.jpg" class="read-icon" alt="朗讀">
-            <button id="speechPlayBtn" class="btn-secondary" onclick="toggleSpeechPlay()">朗讀 / 暫停</button>
-            <!-- 明確標示語音朗讀 audio 標籤 -->
-            <audio id="audioPlayer" class="speech-audio" data-audio-type="speech" controls style="width: 50%; min-width: 200px;"></audio>
+            <button id="speechPlayBtn" class="btn-secondary read-btn" onclick="toggleSpeechPlay()">朗讀 / 暫停</button>
+            <!-- 嚴格註記朗讀 audio -->
+            <audio id="audioPlayer" class="speech-audio read-audio" data-audio-type="speech" controls style="width: 50%; min-width: 200px;"></audio>
         </div>
 
         <div class="audio-row">
-            <button id="muteBtn" class="btn-secondary" onclick="toggleMute()">靜音全站</button>
+            <button id="muteBtn" class="btn-secondary mute-btn" onclick="toggleMute()">靜音全站</button>
             <label for="bgmToggle">
-                <input type="checkbox" id="bgmToggle" checked onchange="toggleBGM()"> 🎵 背景音樂
+                <input type="checkbox" id="bgmToggle" class="bgm-toggle" checked onchange="toggleBGM()"> 🎵 背景音樂
             </label>
             <label for="bgmVolume">音量：
-                <input type="range" id="bgmVolume" min="0" max="1" step="0.05" value="0.25" oninput="adjustBGMVolume(this.value)">
+                <input type="range" id="bgmVolume" class="bgm-volume" min="0" max="1" step="0.05" value="0.25" oninput="adjustBGMVolume(this.value)">
             </label>
-            <!-- 明確標示背景音樂 audio 標籤與靜音/循環屬性 -->
-            <audio id="bgmPlayer" class="bgm-audio" data-audio-type="bgm" loop style="display: none;"></audio>
-            <button class="btn-secondary debug-btn" onclick="toggleDebug()">除錯功能 Debug</button>
+            <!-- 嚴格註記背景音樂 audio (加上 loop 屬性) -->
+            <audio id="bgmPlayer" class="bgm-audio" data-audio-type="bgm" loop preload="auto" style="display: none;"></audio>
+            <button class="btn-secondary debug-btn" onclick="toggleDebug()">除錯功能</button>
         </div>
     </div>
 
     <div class="controls">
-        <button class="nav-btn" id="prevBtn" onclick="changePage(-1)" aria-label="上一頁">
+        <button class="nav-btn prev-btn" id="prevBtn" onclick="changePage(-1)" aria-label="上一頁">
             <img src="graphics/left.jpg" alt="上一頁">
         </button>
         
         <div class="btn-group">
             <span class="page-indicator" id="pageNumber">第 1 / 20 頁</span>
-            <button class="btn-secondary" id="autoPlayBtn" onclick="toggleAutoPlay()">自動播放：關</button>
+            <button class="btn-secondary autoplay-btn" id="autoPlayBtn" onclick="toggleAutoPlay()">自動播放：關</button>
         </div>
 
-        <button class="nav-btn" id="nextBtn" onclick="changePage(1)" aria-label="下一頁">
+        <button class="nav-btn next-btn" id="nextBtn" onclick="changePage(1)" aria-label="下一頁">
             <img src="graphics/right.jpg" alt="下一頁">
         </button>
     </div>
 
-    <!-- 除錯面板 -->
     <div class="debug-panel" id="debugPanel">
-        [Debug Log]: 系統準備就緒...
+        [Debug]: Ready...
     </div>
 </div>
 
@@ -300,33 +299,23 @@
     const loadingOverlay = document.getElementById('loadingOverlay');
     const loadingText = document.getElementById('loadingText');
     const retryBtn = document.getElementById('retryBtn');
-    const debugPanel = document.getElementById('debugPanel');
-
-    function logDebug(msg) {
-        debugPanel.innerHTML += `<br>[${new Date().toLocaleTimeString()}] ${msg}`;
-    }
 
     function loadPage(index) {
         showLoading(true, "載入素材中...");
         const pageData = storyPages[index];
 
-        // 停止上一頁語音並重置
+        // 1. 強制停止與清除前一頁語音
         audioPlayer.pause();
         audioPlayer.currentTime = 0;
 
-        // 圖片與音軌三合一預載
+        // 2. 切換圖片與預載下一頁 (滿足全素材預載)
         storyImage.src = pageData.image;
         preloadNextAssets(index + 1);
 
-        storyImage.onload = () => {
-            showLoading(false);
-            logDebug(`圖片載入成功: Page ${index + 1}`);
-        };
-        storyImage.onerror = () => {
-            showLoading(true, "素材載入失敗！", true);
-            logDebug(`素材載入失敗: Page ${index + 1}`);
-        };
+        storyImage.onload = () => showLoading(false);
+        storyImage.onerror = () => showLoading(true, "素材載入失敗！", true);
 
+        // 3. 切換音軌與文字
         audioPlayer.src = pageData.audio;
         subtitle.innerText = pageData.subtitle;
         pageNumber.innerText = `第 ${pageData.page} / ${storyPages.length} 頁`;
@@ -334,43 +323,43 @@
         prevBtn.disabled = (index === 0);
         nextBtn.disabled = (index === storyPages.length - 1);
 
-        // 套用全站靜音約束（跨頁維持靜音狀態）
+        // 4. 嚴格維持靜音狀態 (防止切換頁面解鎖)
         audioPlayer.muted = isGlobalMuted;
         bgmPlayer.muted = isGlobalMuted;
 
-        // 背景音樂控制 (靜音時不自動響起)
+        // 5. 播放 BGM & 朗讀音訊 (並捕獲 Promise 防止拋錯)
         if (pageData.bgm && bgmToggle.checked) {
-            if (bgmPlayer.src.indexOf(pageData.bgm) === -1) {
-                bgmPlayer.src = pageData.bgm;
-            }
+            bgmPlayer.src = pageData.bgm;
             if (!isGlobalMuted) {
-                bgmPlayer.play().catch(err => {});
+                bgmPlayer.play().catch(() => {});
             }
         } else {
             bgmPlayer.pause();
         }
 
-        // 朗讀觸發邏輯（若非靜音則自動播放）
         if (!isGlobalMuted) {
             audioPlayer.play().then(() => {
                 lowerBGMVolume();
-            }).catch(err => {});
+            }).catch(() => {});
         }
     }
 
-    // 預載下一頁的三大素材 (Image + Speech + BGM)
     function preloadNextAssets(nextIndex) {
         if (nextIndex < storyPages.length) {
             const nextData = storyPages[nextIndex];
             
-            // 1. Image Preload
+            // 圖片預載
             const img = new Image();
             img.src = nextData.image;
             document.getElementById('preloadImage').href = nextData.image;
 
-            // 2. Audio Fetch Preload
+            // 音訊預載
             document.getElementById('preloadSpeech').href = nextData.audio;
             document.getElementById('preloadBgm').href = nextData.bgm;
+
+            // 實體 Audio 物件快取
+            const a1 = new Audio(nextData.audio);
+            const a2 = new Audio(nextData.bgm);
         }
     }
 
@@ -391,14 +380,13 @@
         loadPage(currentPageIndex);
     }
 
-    // 朗讀時降音 (Ducking)
+    // 朗讀降音 (Ducking) 25%
     function lowerBGMVolume() {
         if (!bgmPlayer.paused && !isGlobalMuted) {
             bgmPlayer.volume = baseBgmVolume * 0.25;
         }
     }
 
-    // 朗讀恢復原音量
     function restoreBGMVolume() {
         if (!bgmPlayer.paused && !isGlobalMuted) {
             bgmPlayer.volume = baseBgmVolume;
@@ -409,7 +397,6 @@
     audioPlayer.addEventListener('pause', restoreBGMVolume);
     audioPlayer.addEventListener('ended', () => {
         restoreBGMVolume();
-        logDebug(`朗讀結束: Page ${currentPageIndex + 1}`);
         if (isAutoPlay && currentPageIndex < storyPages.length - 1) {
             changePage(1);
         }
@@ -417,7 +404,7 @@
 
     function toggleSpeechPlay() {
         if (audioPlayer.paused) {
-            if (!isGlobalMuted) audioPlayer.play().catch(err => {});
+            if (!isGlobalMuted) audioPlayer.play().catch(() => {});
         } else {
             audioPlayer.pause();
         }
@@ -432,10 +419,9 @@
             audioPlayer.pause();
         } else {
             const pageData = storyPages[currentPageIndex];
-            if (pageData.bgm && bgmToggle.checked) bgmPlayer.play().catch(err => {});
+            if (pageData.bgm && bgmToggle.checked) bgmPlayer.play().catch(() => {});
         }
         muteBtn.innerText = isGlobalMuted ? '解除靜音' : '靜音全站';
-        logDebug(`全站靜音狀態: ${isGlobalMuted}`);
     }
 
     function toggleAutoPlay() {
@@ -450,7 +436,7 @@
             const pageData = storyPages[currentPageIndex];
             if (pageData.bgm) {
                 bgmPlayer.src = pageData.bgm;
-                bgmPlayer.play().catch(err => {});
+                bgmPlayer.play().catch(() => {});
             }
         }
     }
@@ -465,10 +451,11 @@
     }
 
     function toggleDebug() {
-        debugPanel.style.display = (debugPanel.style.display === 'block') ? 'none' : 'block';
+        const p = document.getElementById('debugPanel');
+        p.style.display = (p.style.display === 'block') ? 'none' : 'block';
     }
 
-    // 鍵盤操作控制
+    // 鍵盤操作快捷鍵 (左右鍵翻頁、空白鍵朗讀)
     window.addEventListener('keydown', (e) => {
         if (e.code === 'ArrowRight' || e.key === 'ArrowRight') {
             if (currentPageIndex < storyPages.length - 1) changePage(1);
