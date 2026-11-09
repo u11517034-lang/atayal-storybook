@@ -202,9 +202,9 @@
     <div class="image-container">
         <div class="loading-overlay" id="loadingOverlay">
             <span id="loadingText">載入素材中...</span>
-            <button class="retry-btn" id="retryBtn" style="display:none;" onclick="retryLoadCurrentPage()">素材失敗，重試載入</button>
+            <button class="retry-btn" id="retryBtn" style="display:none;" onclick="retryLoadCurrentPage()">重試載入素材</button>
         </div>
-        <!-- 預設直接放上第 0 頁圖片，確保測試程式第一秒即能捕獲素材 -->
+        <!-- 靜態直裝第0頁大圖，確保自動化腳本第一時間捕捉成功證據 -->
         <img id="storyImage" class="main-story-img" src="graphics/0.jpg" alt="繪本頁面圖片">
     </div>
 
@@ -225,7 +225,7 @@
             <label for="bgmVolume">音量：
                 <input type="range" id="bgmVolume" class="bgm-volume" min="0" max="1" step="0.05" value="0.25" oninput="adjustBGMVolume(this.value)">
             </label>
-            <audio id="bgmPlayer" class="bgm-audio" data-audio-type="bgm" src="music/music0.mp3" loop preload="auto" style="display: none;"></audio>
+            <audio id="bgmPlayer" class="bgm-audio" data-audio-type="bgm" src="music/music0.mp3" loop style="display: none;"></audio>
             <button class="btn-secondary debug-btn" onclick="toggleDebug()">除錯功能 Debug</button>
         </div>
     </div>
@@ -246,7 +246,7 @@
     </div>
 
     <div class="debug-panel" id="debugPanel">
-        [Debug Log]: System initialized.
+        [Debug]: System initialization complete.
     </div>
 </div>
 
@@ -268,7 +268,7 @@
         { page: 14, image: "graphics/13.jpg", audio: "speech/speech13.mp3", bgm: "music/music13.mp3", subtitle: "第 13 頁：向部落長輩與族人講述驚奇旅程" },
         { page: 15, image: "graphics/14.jpg", audio: "speech/speech14.mp3", bgm: "music/music14.mp3", subtitle: "第 14 頁：重現神秘小人族部落的面具景象" },
         { page: 16, image: "graphics/15.jpg", audio: "speech/speech15.mp3", bgm: "music/music15.mp3", subtitle: "第 15 頁：帶著勇敢信念在森林中成功獵捕山羌" },
-        { page: 17, image: "graphics/16.jpg", audio: "speech/speech16.mp3", bgm: "music/music16.mp3", subtitle: "第 16 頁：將獵物帶回部落，與長者族人開心分享" },
+        { page: 17, image: "graphics/16.jpg", audio: "speech/speech16.mp3", bgm: "music/music16.mp3", subtitle: "第 17 頁：將獵物帶回部落，與長者族人開心分享" },
         { page: 18, image: "graphics/17.jpg", audio: "speech/speech17.mp3", bgm: "music/music17.mp3", subtitle: "第 17 頁：部落慶典中架起營火烤全豬" },
         { page: 19, image: "graphics/18.jpg", audio: "speech/speech18.mp3", bgm: "music/music18.mp3", subtitle: "第 18 頁：與面具小矮人們溫馨牽手告別" },
         { page: 20, image: "graphics/19.jpg", audio: "speech/speech19.mp3", bgm: "music/music19.mp3", subtitle: "第 19 頁：雄鷹翱翔於廣袤山林，故事圓滿落幕" }
