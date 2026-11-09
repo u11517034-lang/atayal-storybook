@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mnanak na qalang 奇妙的部落 - 泰雅族語互動繪本</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+            background-color: #2b1f1a;
+            color: #f4ede2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .storybook-container {
+            background-color: #1a120e;
+            width: 100%;
+            max-width: 920px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            border: 4px solid #8c6d58;
+            overflow: hidden;
+            text-align: center;
+            position: relative;
+        }
+        .header-title {
+            padding: 12px 20px;
+            background-color: #3b281e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            border-bottom: 2px solid #5a4538;
+        }
+        .header-title img {
+            height: 38px;
+            width: auto;
+        }
+        .header-title h1 {
+            font-size: 22px;
+            color: #d9a441;
+            letter-spacing: 1px;
+        }
+        .image-container {
+            width: 100%;
+            height: 520px;
+            background-color: #0d0806;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .image-container img.main-story-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .subtitle-box {
+            padding: 16px 24px;
+            background-color: #261b15;
+            border-top: 2px solid #4a3528;
+            font-size: 18px;
+            color: #fcebd5;
+            min-height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.6;
+        }
+        .audio-section {
+            padding: 12px 20px;
+            background-color: #1f1511;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            border-top: 1px dashed #4a3528;
+        }
+        .audio-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        .read-icon {
+            height: 32px;
+            vertical-align: middle;
+        }
+        .audio-control-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #d1c2b4;
+        }
+        .controls {
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #140d0a;
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s;
+        }
+        .nav-btn img {
+            height: 48px;
+            width: auto;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
+        }
+        .nav-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+        }
+        .nav-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        .nav-btn:disabled img {
+            opacity: 0.3;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+        .btn-secondary {
+            background-color: #d9a441;
+            color: #1e1612;
+            border: none;
+            padding: 8px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-secondary:hover {
+            background-color: #ecc055;
+        }
+        .page-indicator {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d9a441;
+        }
+    </style>
+</head>
+<body>
+
+<div class="storybook-container">
+    <!-- 標題欄 (指向 graphics/spirit.png) -->
+    <div class="header-title">
+        <img src="graphics/spirit.png" alt="小精靈圖示">
+        <h1>mnanak na qalang 奇妙的部落</h1>
+    </div>
+
+    <!-- 1. 繪本圖片區域 -->
+    <div class="image-container">
+        <img id="storyImage" class="main-story-img" src="" alt="繪本頁面圖片">
+    </div>
+
+    <!-- 2. 中文／族語對照字幕 -->
+    <div class="subtitle-box" id="subtitle">
+        載入中...
+    </div>
+
+    <!-- 3. 音訊控制區 (指向 graphics/read.jpg) -->
+    <div class="audio-section">
+        <div class="audio-row">
+            <img src="graphics/read.jpg" class="read-icon" alt="朗讀">
+            <span style="font-weight: bold; color: #d9a441;">泰雅族語朗讀：</span>
+            <audio id="audioPlayer" controls style="width: 55%; min-width: 250px;"></audio>
+        </div>
+
+        <div class="audio-row">
+            <div class="audio-control-item">
+                <input type="checkbox" id="bgmToggle" checked onchange="toggleBGM()">
+                <label for="bgmToggle">🎵 情境背景音樂</label>
+            </div>
+            <div class="audio-control-item">
+                <label for="bgmVolume">BGM 音量：</label>
+                <input type="range" id="bgmVolume" min="0" max="1" step="0.05" value="0.25" oninput="adjustBGMVolume(this.value)">
+            </div>
+            <audio id="bgmPlayer" loop style="display: none;"></audio>
+        </div>
+    </div>
+
+    <!-- 4. 底部分頁導覽 (指向 graphics/left.jpg 與 graphics/right.jpg) -->
+    <div class="controls">
+        <button class="nav-btn" id="prevBtn" onclick="changePage(-1)" title="上一頁">
+            <img src="graphics/left.jpg" alt="上一頁箭頭">
+        </button>
+        
+        <div class="btn-group">
+            <span class="page-indicator" id="pageNumber">第 1 / 20 頁</span>
+            <button class="btn-secondary" id="autoPlayBtn" onclick="toggleAutoPlay()">自動播放：關</button>
+        </div>
+
+        <button class="nav-btn" id="nextBtn" onclick="changePage(1)" title="下一頁">
+            <img src="graphics/right.jpg" alt="下一頁箭頭">
+        </button>
+    </div>
+</div>
+
+<script>
+    // 20 頁故事完整對應陣列（已配合你的資料夾結構修正路徑）
+    const storyPages = [
+        { page: 1,  image: "graphics/0.jpg",  audio: "speech/speech0.mp3",  bgm: "music/music0.mp3", subtitle: "《mnanak na qalang》（奇妙的部落）- 繪本封面" },
+        { page: 2,  image: "graphics/1.jpg",  audio: "speech/speech1.mp3",  bgm: "music/music1.mp3", subtitle: "第 1 頁：廣闊的金黃粟米田與自然生態" },
+        { page: 3,  image: "graphics/2.jpg",  audio: "speech/speech2.mp3",  bgm: "music/music2.mp3", subtitle: "第 2 頁：老樹下的竹筒傳說" },
+        { page: 4,  image: "graphics/3.jpg",  audio: "speech/speech3.mp3",  bgm: "music/music3.mp3", subtitle: "第 3 頁：森林深夜的驚險追逐與神秘小人族" },
+        { page: 5,  image: "graphics/4.jpg",  audio: "speech/speech4.mp3",  bgm: "music/music4.mp3", subtitle: "第 4 頁：來到奇妙部落，村民戴著傳統面具" },
+        { page: 6,  image: "graphics/5.jpg",  audio: "speech/speech5.mp3",  bgm: "music/music5.mp3", subtitle: "第 5 頁：穿越茂密的森林與矮人小隊同行" },
+        { page: 7,  image: "graphics/6.jpg",  audio: "speech/speech6.mp3",  bgm: "music/music6.mp3", subtitle: "第 6 頁：頭目寶座與部落女孩的相遇儀式" },
+        { page: 8,  image: "graphics/7.jpg",  audio: "speech/speech7.mp3",  bgm: "music/music7.mp3", subtitle: "第 7 頁：青蛙歡樂大豐收與抓蛙同樂" },
+        { page: 9,  image: "graphics/8.jpg",  audio: "speech/speech8.mp3",  bgm: "music/music8.mp3", subtitle: "第 8 頁：神秘藥飲與昆蟲考驗" },
+        { page: 10, image: "graphics/9.jpg",  audio: "speech/speech9.mp3",  bgm: "music/music9.mp3", subtitle: "第 9 頁：營火旁香氣四溢的烤山豬肉饗宴" },
+        { page: 11, image: "graphics/10.jpg", audio: "speech/speech10.mp3", bgm: "music/music10.mp3", subtitle: "第 10 頁：被部落面具戰士們捆綁約束的緊張關頭" },
+        { page: 12, image: "graphics/11.jpg", audio: "speech/speech11.mp3", bgm: "music/music11.mp3", subtitle: "第 11 頁：獲贈神聖長矛矢，建立彼此信賴" },
+        { page: 13, image: "graphics/12.jpg", audio: "speech/speech12.mp3", bgm: "music/music12.mp3", subtitle: "第 12 頁：於草堆中甦醒，長老驚訝關切" },
+        { page: 14, image: "graphics/13.jpg", audio: "speech/speech13.mp3", bgm: "music/music13.mp3", subtitle: "第 13 頁：向部落長輩與族人講述驚奇旅程" },
+        { page: 15, image: "graphics/14.jpg", audio: "speech/speech14.mp3", bgm: "music/music14.mp3", subtitle: "第 14 頁：重現神秘小人族部落的面具景象" },
+        { page: 16, image: "graphics/15.jpg", audio: "speech/speech15.mp3", bgm: "music/music15.mp3", subtitle: "第 15 頁：帶著勇敢信念在森林中成功獵捕山羌" },
+        { page: 17, image: "graphics/16.jpg", audio: "speech/speech16.mp3", bgm: "music/music16.mp3", subtitle: "第 16 頁：將獵物帶回部落，與長者族人開心分享" },
+        { page: 18, image: "graphics/17.jpg", audio: "speech/speech17.mp3", bgm: "music/music17.mp3", subtitle: "第 17 頁：部落慶典中架起營火烤全豬" },
+        { page: 19, image: "graphics/18.jpg", audio: "speech/speech18.mp3", bgm: "music/music18.mp3", subtitle: "第 18 頁：與面具小矮人們溫馨牽手告別" },
+        { page: 20, image: "graphics/19.jpg", audio: "speech/speech19.mp3", bgm: "music/music19.mp3", subtitle: "第 19 頁：雄鷹翱翔於廣袤山林，故事圓滿落幕" }
+    ];
+
+    let currentPageIndex = 0;
+    let isAutoPlay = false;
+
+    const storyImage = document.getElementById('storyImage');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const bgmPlayer = document.getElementById('bgmPlayer');
+    const bgmToggle = document.getElementById('bgmToggle');
+    const subtitle = document.getElementById('subtitle');
+    const pageNumber = document.getElementById('pageNumber');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const autoPlayBtn = document.getElementById('autoPlayBtn');
+
+    function loadPage(index) {
+        const pageData = storyPages[index];
+        storyImage.src = pageData.image;
+        audioPlayer.src = pageData.audio;
+        
+        subtitle.innerText = pageData.subtitle;
+        pageNumber.innerText = `第 ${pageData.page} / ${storyPages.length} 頁`;
+
+        prevBtn.disabled = (index === 0);
+        nextBtn.disabled = (index === storyPages.length - 1);
+
+        // 背景音樂控制
+        if (pageData.bgm && bgmToggle.checked) {
+            if (bgmPlayer.src.indexOf(pageData.bgm) === -1) {
+                bgmPlayer.src = pageData.bgm;
+                bgmPlayer.play().catch(err => {});
+            }
+        } else {
+            bgmPlayer.pause();
+        }
+
+        audioPlayer.play().catch(err => {});
+    }
+
+    function changePage(direction) {
+        currentPageIndex += direction;
+        if (currentPageIndex < 0) currentPageIndex = 0;
+        if (currentPageIndex >= storyPages.length) currentPageIndex = storyPages.length - 1;
+        loadPage(currentPageIndex);
+    }
+
+    function toggleAutoPlay() {
+        isAutoPlay = !isAutoPlay;
+        autoPlayBtn.innerText = `自動播放：${isAutoPlay ? '開' : '關'}`;
+    }
+
+    function toggleBGM() {
+        if (!bgmToggle.checked) {
+            bgmPlayer.pause();
+        } else {
+            const pageData = storyPages[currentPageIndex];
+            if (pageData.bgm) {
+                bgmPlayer.src = pageData.bgm;
+                bgmPlayer.play().catch(err => {});
+            }
+        }
+    }
+
+    function adjustBGMVolume(val) {
+        bgmPlayer.volume = val;
+    }
+
+    audioPlayer.addEventListener('ended', () => {
+        if (isAutoPlay && currentPageIndex < storyPages.length - 1) {
+            changePage(1);
+        }
+    });
+
+    loadPage(0);
+</script>
+
+</body>
+</html>
